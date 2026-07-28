@@ -1,7 +1,7 @@
 {
-  "name": "lanjiang-traffic-command",
+  "name": "admin",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,16 +9,24 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@vitejs/plugin-vue": "latest",
-    "echarts": "latest",
-    "@lucide/vue": "latest",
-    "three": "latest",
-    "vue": "latest"
+    "@vueuse/core": "^14.3.0",
+    "axios": "^1.18.1",
+    "dayjs": "^1.11.21",
+    "echarts": "^6.1.0",
+    "gsap": "^3.15.0",
+    "pinia": "^4.0.2",
+    "vue": "^3.5.39",
+    "vue-router": "^5.2.0"
   },
   "devDependencies": {
-    "@types/three": "latest",
-    "typescript": "~5.9.3",
-    "vite": "latest",
-    "vue-tsc": "latest"
+    "@iconify-json/lucide": "^1.2.120",
+    "@types/node": "^24.13.2",
+    "@unocss/reset": "^66.7.5",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "@vue/tsconfig": "^0.9.1",
+    "typescript": "~6.0.2",
+    "unocss": "^66.7.5",
+    "vite": "^8.1.1",
+    "vue-tsc": "^3.3.5"
   }
 }

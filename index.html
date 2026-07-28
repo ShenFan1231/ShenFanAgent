@@ -1,13 +1,39 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#070a0d" />
-    <title>智慧交通运行指挥中心</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="description" content="NEBULA — 面向数据中台的现代化后台管理系统" />
+    <title>NEBULA 控制台</title>
+    <script>
+      // Apply the persisted theme before first paint to avoid a light flash.
+      ;(function () {
+        try {
+          var raw = localStorage.getItem('nebula:app')
+          var parsed = raw ? JSON.parse(raw) : null
+          // storage 工具把值包在 { v, e } 信封里
+          var theme = parsed && parsed.v ? parsed.v.theme : null
+          if (theme !== 'light' && theme !== 'dark') {
+            theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+          }
+          document.documentElement.dataset.theme = theme
+        } catch (e) {
+          document.documentElement.dataset.theme = 'dark'
+        }
+      })()
+    </script>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <!-- Boot screen: lives in index.html so something is on screen before the JS bundle evaluates. -->
+      <div class="boot-screen">
+        <div class="boot-ring"></div>
+        <div class="boot-name">NEBULA</div>
+        <div class="boot-hint">正在初始化控制台…</div>
+      </div>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

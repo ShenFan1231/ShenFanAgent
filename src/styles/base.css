@@ -1,0 +1,265 @@
+html,
+body,
+#app {
+  height: 100%;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, 'Plus Jakarta Sans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgb(var(--c-text));
+  background-color: rgb(var(--c-canvas));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+  /* Theme swap: animate the cheap properties only. */
+  transition:
+    background-color var(--dur-base) var(--ease-in-out-soft),
+    color var(--dur-base) var(--ease-in-out-soft);
+}
+
+::selection {
+  background: rgb(var(--c-brand) / 0.28);
+  color: rgb(var(--c-text));
+}
+
+/* Iconify 图标统一按行内元素对齐，避免在文字旁边把行高顶开 */
+[class*='i-lucide-'] {
+  display: inline-block;
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* ------------------------------------------------------------ scrollbar --- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 2px solid transparent;
+  background-clip: content-box;
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--c-brand) / 0.5);
+  background-clip: content-box;
+}
+
+/* ----------------------------------------------------------- boot screen -- */
+.boot-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  background: rgb(var(--c-canvas));
+  z-index: 9999;
+}
+
+.boot-ring {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  border: 2px solid rgb(var(--c-line));
+  border-top-color: rgb(var(--c-brand));
+  border-right-color: rgb(var(--c-violet));
+  animation: boot-spin 0.9s linear infinite;
+}
+
+.boot-name {
+  font-size: 15px;
+  letter-spacing: 0.42em;
+  font-weight: 600;
+  color: rgb(var(--c-text));
+  padding-left: 0.42em;
+}
+
+.boot-hint {
+  font-size: 12px;
+  color: rgb(var(--c-text-dim));
+}
+
+@keyframes boot-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* -------------------------------------------------- route progress bar ---- */
+.route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10000;
+  width: 100%;
+  height: 2px;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  opacity: 0;
+  background: linear-gradient(90deg, rgb(var(--c-brand)), rgb(var(--c-violet)));
+  transition:
+    transform 220ms var(--ease-out-expo),
+    opacity 220ms ease;
+  pointer-events: none;
+}
+
+.route-progress__peg {
+  position: absolute;
+  right: 0;
+  top: -1px;
+  width: 90px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgb(var(--c-brand));
+  box-shadow:
+    0 0 12px rgb(var(--c-brand) / 0.9),
+    0 0 24px rgb(var(--c-violet) / 0.7);
+}
+
+/* -------------------------------------------------------- shared effects -- */
+/* Thin gradient hairline used on top of panels for a "lit edge" look. */
+.edge-light::before {
+  content: '';
+  position: absolute;
+  inset-inline: 12%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(var(--c-brand) / 0.65),
+    rgb(var(--c-violet) / 0.5),
+    transparent
+  );
+  opacity: 0.75;
+  pointer-events: none;
+}
+
+.panel-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--panel-highlight);
+  pointer-events: none;
+}
+
+/* Cursor-tracked spotlight. --mx/--my are written by v-spotlight. */
+.spotlight {
+  position: relative;
+  isolation: isolate;
+}
+
+.spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    260px circle at var(--mx, 50%) var(--my, 50%),
+    rgb(var(--c-brand) / 0.16),
+    transparent 62%
+  );
+  opacity: 0;
+  transition: opacity var(--dur-base) ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.spotlight:hover::before {
+  opacity: 1;
+}
+
+/* v-ripple */
+.ripple-wave {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(var(--c-brand) / 0.4), rgb(var(--c-brand) / 0) 70%);
+  transform: scale(0);
+  opacity: 0.9;
+  pointer-events: none;
+  animation: ripple 620ms var(--ease-out-expo) forwards;
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* v-reveal */
+.reveal-init {
+  opacity: 0;
+  transform: translate3d(0, 22px, 0);
+  transition:
+    opacity 620ms var(--ease-out-expo),
+    transform 720ms var(--ease-out-expo);
+  will-change: transform, opacity;
+}
+
+.reveal-init.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+
+.is-permission-denied {
+  opacity: 0.45;
+  cursor: not-allowed !important;
+  filter: grayscale(0.6);
+}
+
+.text-shadow-glow {
+  text-shadow: 0 0 22px rgb(var(--c-brand) / 0.45);
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* --------------------------------------------------------------- motion --- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,209 @@
+/**
+ * Shared <Transition> vocabularies.
+ * Everything animates transform/opacity/filter only, so the compositor can
+ * keep these on the GPU and off the layout thread.
+ */
+
+/* ------------------------------------------------------------ route view -- */
+.route-enter-active {
+  transition:
+    opacity 320ms var(--ease-out-expo),
+    transform 420ms var(--ease-out-expo),
+    filter 320ms var(--ease-out-expo);
+  will-change: transform, opacity;
+}
+
+.route-leave-active {
+  transition:
+    opacity 180ms ease,
+    transform 220ms ease,
+    filter 180ms ease;
+  will-change: transform, opacity;
+}
+
+.route-enter-from {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0) scale(0.985);
+  filter: blur(6px);
+}
+
+.route-leave-to {
+  opacity: 0;
+  transform: translate3d(0, -10px, 0) scale(0.995);
+  filter: blur(4px);
+}
+
+/* ----------------------------------------------------------------- fade --- */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity var(--dur-base) ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* ----------------------------------------------------------- fade-slide --- */
+.fade-slide-enter-active {
+  transition:
+    opacity 220ms ease,
+    transform 280ms var(--ease-out-expo);
+}
+
+.fade-slide-leave-active {
+  transition:
+    opacity 140ms ease,
+    transform 160ms ease;
+  position: absolute;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translate3d(0, 8px, 0);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translate3d(0, -6px, 0);
+}
+
+/* -------------------------------------------------------------- dropdown -- */
+.pop-enter-active {
+  transition:
+    opacity 160ms ease,
+    transform 240ms var(--ease-out-back);
+  transform-origin: var(--pop-origin, top right);
+}
+
+.pop-leave-active {
+  transition:
+    opacity 120ms ease,
+    transform 140ms ease;
+  transform-origin: var(--pop-origin, top right);
+}
+
+.pop-enter-from,
+.pop-leave-to {
+  opacity: 0;
+  transform: translate3d(0, -6px, 0) scale(0.94);
+}
+
+/* ----------------------------------------------------------------- modal -- */
+.modal-mask-enter-active,
+.modal-mask-leave-active {
+  transition:
+    opacity 240ms ease,
+    backdrop-filter 240ms ease;
+}
+
+.modal-mask-enter-from,
+.modal-mask-leave-to {
+  opacity: 0;
+  backdrop-filter: blur(0px);
+}
+
+.modal-panel-enter-active {
+  transition:
+    opacity 240ms ease,
+    transform 420ms var(--ease-out-expo);
+}
+
+.modal-panel-leave-active {
+  transition:
+    opacity 160ms ease,
+    transform 200ms ease;
+}
+
+.modal-panel-enter-from {
+  opacity: 0;
+  transform: translate3d(0, 26px, 0) scale(0.94);
+}
+
+.modal-panel-leave-to {
+  opacity: 0;
+  transform: translate3d(0, 12px, 0) scale(0.97);
+}
+
+/* ---------------------------------------------------------------- drawer -- */
+.drawer-panel-enter-active {
+  transition: transform 420ms var(--ease-out-expo);
+}
+
+.drawer-panel-leave-active {
+  transition: transform 260ms var(--ease-in-out-soft);
+}
+
+.drawer-panel-enter-from,
+.drawer-panel-leave-to {
+  transform: translate3d(100%, 0, 0);
+}
+
+/* -------------------------------------------------------- list / tabs tg --- */
+.stagger-move,
+.stagger-enter-active,
+.stagger-leave-active {
+  transition:
+    opacity 260ms ease,
+    transform 380ms var(--ease-out-expo);
+}
+
+.stagger-enter-from {
+  opacity: 0;
+  transform: translate3d(-10px, 0, 0) scale(0.96);
+}
+
+.stagger-leave-to {
+  opacity: 0;
+  transform: translate3d(0, -8px, 0) scale(0.9);
+}
+
+.stagger-leave-active {
+  position: absolute;
+}
+
+/* ------------------------------------------------------------- shimmer ---- */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  70% {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0);
+  }
+}
+
+@keyframes sweep-x {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(320%);
+  }
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}

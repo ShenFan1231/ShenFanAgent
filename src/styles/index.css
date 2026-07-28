@@ -1,0 +1,4 @@
+/* reset 与 uno utilities 在 main.ts 里按顺序引入，这里只放项目自己的样式 */
+@import './theme.css';
+@import './base.css';
+@import './transitions.css';

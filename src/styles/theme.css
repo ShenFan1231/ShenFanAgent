@@ -1,0 +1,93 @@
+/**
+ * Design tokens.
+ *
+ * Every color is stored as a bare `R G B` triplet so both UnoCSS utilities
+ * (`rgb(var(--c-x) / <alpha-value>)`) and hand written CSS can consume them
+ * with arbitrary opacity. Switching `data-theme` on <html> re-themes the app
+ * in one repaint, no JS-driven style recalculation per component.
+ */
+
+:root {
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  --sidebar-w: 248px;
+  --sidebar-w-collapsed: 76px;
+  --header-h: 62px;
+  --tabs-h: 44px;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out-back: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0.05, 0.36, 1);
+
+  --dur-fast: 160ms;
+  --dur-base: 260ms;
+  --dur-slow: 480ms;
+}
+
+/* ---------------------------------------------------------------- dark ---- */
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --c-canvas: 5 8 17;
+  --c-surface: 15 21 38;
+  --c-elevated: 22 30 52;
+  --c-line: 44 57 88;
+  --c-text: 231 238 253;
+  --c-text-soft: 156 171 202;
+  --c-text-dim: 105 120 152;
+
+  --c-brand: 52 224 214;
+  --c-violet: 141 118 255;
+  --c-success: 45 212 160;
+  --c-warning: 250 191 74;
+  --c-danger: 251 113 133;
+
+  /* Ambient light sources painted behind the whole shell. */
+  --aurora-1: rgb(52 224 214 / 0.2);
+  --aurora-2: rgb(141 118 255 / 0.22);
+  --aurora-3: rgb(37 99 235 / 0.16);
+
+  --grid-line: rgb(120 160 220 / 0.055);
+  --noise-opacity: 0.035;
+
+  --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 24px 60px -30px rgb(0 0 0 / 0.9);
+  --panel-highlight: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.07) 0%,
+    rgb(255 255 255 / 0) 42%
+  );
+  --scrollbar-thumb: rgb(90 110 150 / 0.45);
+}
+
+/* --------------------------------------------------------------- light ---- */
+[data-theme='light'] {
+  color-scheme: light;
+
+  --c-canvas: 238 242 249;
+  --c-surface: 255 255 255;
+  --c-elevated: 248 250 254;
+  --c-line: 210 220 238;
+  --c-text: 18 26 46;
+  --c-text-soft: 82 96 124;
+  --c-text-dim: 128 141 168;
+
+  --c-brand: 10 160 172;
+  --c-violet: 108 82 232;
+  --c-success: 16 168 122;
+  --c-warning: 202 138 4;
+  --c-danger: 232 76 104;
+
+  --aurora-1: rgb(10 160 172 / 0.16);
+  --aurora-2: rgb(108 82 232 / 0.14);
+  --aurora-3: rgb(56 130 246 / 0.12);
+
+  --grid-line: rgb(40 70 120 / 0.06);
+  --noise-opacity: 0.02;
+
+  --shadow-panel: 0 1px 0 0 rgb(255 255 255 / 0.9) inset, 0 18px 40px -26px rgb(24 40 80 / 0.35);
+  --panel-highlight: linear-gradient(180deg, rgb(255 255 255 / 0.8) 0%, rgb(255 255 255 / 0) 48%);
+  --scrollbar-thumb: rgb(120 140 175 / 0.4);
+}
