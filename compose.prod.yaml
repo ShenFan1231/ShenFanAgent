@@ -123,6 +123,8 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
+    volumes:
+      - nebula-certbot-www:/var/www/certbot:ro
     depends_on:
       api:
         condition: service_healthy
@@ -141,8 +143,17 @@ services:
         max-size: 10m
         max-file: "3"
 
+  certbot:
+    image: certbot/certbot@sha256:34ee91d2f43008eb78a007d22f23ed4b2eaa9a454cb27ca2c042b49527a695b4
+    profiles: ["certbot"]
+    volumes:
+      - nebula-certbot-www:/var/www/certbot
+      - nebula-letsencrypt:/etc/letsencrypt
+
 volumes:
   nebula-postgres-data:
+  nebula-certbot-www:
+  nebula-letsencrypt:
 
 networks:
   frontend:
