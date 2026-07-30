@@ -62,7 +62,11 @@ export function setupRouterGuard(router: Router): void {
 
     // 首次进入：按角色生成可访问路由并动态注册
     if (!permissionStore.generated) {
-      const routes = permissionStore.buildRoutes(userStore.roles, userStore.permissions)
+      const routes = permissionStore.buildRoutes(
+        userStore.roles,
+        userStore.permissions,
+        userStore.profile?.menus,
+      )
       permissionStore.registerRemovers(routes.map((route) => router.addRoute(route)))
       tabsStore.restore()
       tabsStore.initAffixTabs(permissionStore.accessibleRoutes)

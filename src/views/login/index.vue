@@ -29,6 +29,7 @@ const username = ref(DEMO_ACCOUNT.super_admin)
 const password = ref('nebula123')
 const loading = ref(false)
 const errorText = ref('')
+const useMock = import.meta.env.VITE_USE_MOCK === '1'
 
 const redirect = computed(() => (route.query.redirect as string | undefined) ?? '/dashboard')
 
@@ -118,7 +119,11 @@ async function submit(): Promise<void> {
         <div class="relative">
           <h1 class="text-[20px] font-semibold tracking-tight">登录控制台</h1>
           <p class="mt-1 text-[12.5px] text-text-dim">
-            演示环境：任选一个角色，密码任意（不少于 6 位）
+            {{
+              useMock
+                ? 'Mock 环境：任选一个角色，密码任意（不少于 6 位）'
+                : '真实 API：开发账号密码统一为 nebula123'
+            }}
           </p>
 
           <!-- 角色速选：直接体现权限系统的存在 -->
@@ -188,7 +193,9 @@ async function submit(): Promise<void> {
           </form>
 
           <div class="mt-4 flex items-center justify-between text-[11px] text-text-dim">
-            <AppTag tone="brand" size="xs" icon="i-lucide-shield">Mock 环境</AppTag>
+            <AppTag tone="brand" size="xs" icon="i-lucide-shield">
+              {{ useMock ? 'Mock 环境' : 'NestJS API' }}
+            </AppTag>
             <span>当前角色：{{ ROLE_META[role].name }}</span>
           </div>
         </div>

@@ -25,6 +25,8 @@ export interface RequestExtras {
   returnRaw?: boolean
   /** 失败重试次数，仅对幂等请求生效 */
   retry?: number
+  /** 内部使用：跳过 401 自动刷新。 */
+  skipAuthRefresh?: boolean
 }
 
 declare module 'axios' {
@@ -32,6 +34,8 @@ declare module 'axios' {
   export interface AxiosRequestConfig extends RequestExtras {
     /** 内部使用：已重试次数 */
     __retryCount?: number
+    /** 内部使用：该请求已经完成过一次令牌刷新。 */
+    __authRetried?: boolean
   }
 }
 
@@ -88,6 +92,7 @@ export function cancelAllRequests(): void {
 const http: AxiosInstance = axios.create({
   baseURL: ENV.VITE_API_BASE_URL || '/api',
   timeout: Number(ENV.VITE_REQUEST_TIMEOUT ?? 15000),
+  withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 })
 
@@ -140,6 +145,23 @@ http.interceptors.response.use(
     const payload = error.response?.data
     const message = payload?.message || mapHttpMessage(status, error.message)
 
+    if (
+      status === BizCode.UNAUTHORIZED &&
+      config &&
+      !config.withoutToken &&
+      !config.skipAuthRefresh &&
+      !config.__authRetried
+    ) {
+      config.__authRetried = true
+      try {
+        const token = await refreshAccessToken()
+        config.headers.Authorization = `Bearer ${token}`
+        return http.request(config)
+      } catch {
+        await handleUnauthorized()
+      }
+    }
+
     if (status === BizCode.UNAUTHORIZED || payload?.code === BizCode.UNAUTHORIZED) {
       await handleUnauthorized()
     }
@@ -147,6 +169,39 @@ http.interceptors.response.use(
     return Promise.reject(new RequestError(message, payload?.code ?? status, payload?.traceId))
   },
 )
+
+let refreshPromise: Promise<string> | null = null
+
+async function refreshAccessToken(): Promise<string> {
+  refreshPromise ??= axios
+    .post<ApiResult<{ token: string; expiresIn: number }>>(
+      `${ENV.VITE_API_BASE_URL || '/api'}/auth/refresh`,
+      undefined,
+      {
+        timeout: Number(ENV.VITE_REQUEST_TIMEOUT ?? 15000),
+        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Request-Id': crypto.randomUUID?.() ?? String(Date.now()),
+        },
+      },
+    )
+    .then(async ({ data }) => {
+      if (data.code !== BizCode.SUCCESS || !data.data?.token) {
+        throw new RequestError(data.message || '刷新登录状态失败', data.code, data.traceId)
+      }
+      const { token, expiresIn } = data.data
+      local.set(StorageKeys.TOKEN, token, expiresIn * 1000)
+      const { useUserStore } = await import('@/stores/user')
+      useUserStore().setToken(token, expiresIn)
+      return token
+    })
+    .finally(() => {
+      refreshPromise = null
+    })
+
+  return refreshPromise
+}
 
 function mapHttpMessage(status: number, fallback: string): string {
   const table: Record<number, string> = {

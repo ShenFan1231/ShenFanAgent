@@ -92,11 +92,31 @@ export const asyncRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/agent',
+    name: 'Agent',
+    component: BasicLayout,
+    redirect: '/agent/workbench',
+    meta: { title: 'AI Agent', icon: 'i-lucide-bot', order: 3 },
+    children: [
+      {
+        path: 'workbench',
+        name: 'AgentWorkbench',
+        component: () => import('@/views/agent/workbench/index.vue'),
+        meta: {
+          title: 'Agent 工作台',
+          icon: 'i-lucide-sparkles',
+          keepAlive: true,
+          permissions: ['agent:view'],
+        },
+      },
+    ],
+  },
+  {
     path: '/order',
     name: 'Order',
     component: BasicLayout,
     redirect: '/order/list',
-    meta: { title: '交易中心', icon: 'i-lucide-receipt-text', order: 3 },
+    meta: { title: '交易中心', icon: 'i-lucide-receipt-text', order: 4 },
     children: [
       {
         path: 'list',
@@ -124,6 +144,26 @@ export const asyncRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/project',
+    name: 'Project',
+    component: BasicLayout,
+    redirect: '/project/list',
+    meta: { title: '项目中心', icon: 'i-lucide-boxes', order: 5 },
+    children: [
+      {
+        path: 'list',
+        name: 'ProjectList',
+        component: () => import('@/views/project/list/index.vue'),
+        meta: {
+          title: '项目管理',
+          icon: 'i-lucide-panels-top-left',
+          keepAlive: true,
+          permissions: ['project:view'],
+        },
+      },
+    ],
+  },
+  {
     path: '/system',
     name: 'System',
     component: BasicLayout,
@@ -131,7 +171,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
     meta: {
       title: '系统管理',
       icon: 'i-lucide-settings-2',
-      order: 4,
+      order: 6,
       roles: ['super_admin', 'admin'],
     },
     children: [
@@ -159,6 +199,17 @@ export const asyncRoutes: RouteRecordRaw[] = [
         },
       },
       {
+        path: 'operation-log',
+        name: 'SystemOperationLog',
+        component: () => import('@/views/system/operation-log/index.vue'),
+        meta: {
+          title: '操作日志',
+          icon: 'i-lucide-scroll-text',
+          keepAlive: true,
+          permissions: ['log:view'],
+        },
+      },
+      {
         path: 'setting',
         name: 'SystemSetting',
         component: () => import('@/views/system/setting/index.vue'),
@@ -176,7 +227,7 @@ export const asyncRoutes: RouteRecordRaw[] = [
     name: 'Lab',
     component: BasicLayout,
     redirect: '/lab/showcase',
-    meta: { title: '交互实验室', icon: 'i-lucide-flask-conical', order: 5 },
+    meta: { title: '交互实验室', icon: 'i-lucide-flask-conical', order: 7 },
     children: [
       {
         path: 'showcase',

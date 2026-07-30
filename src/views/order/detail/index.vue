@@ -29,9 +29,7 @@ const orderId = computed(() => String(route.params.id ?? ''))
 
 const { data, loading } = useAsyncData(
   async () => {
-    // 演示环境没有单条查询接口，从列表里筛出目标订单
-    const result = await systemApi.orders({ page: 1, pageSize: 200 })
-    return result.list.find((item) => item.id === orderId.value) ?? null
+    return systemApi.order(orderId.value)
   },
   {
     onSuccess: (order) => {

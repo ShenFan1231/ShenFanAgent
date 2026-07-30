@@ -2,11 +2,20 @@
   "name": "admin",
   "private": true,
   "version": "0.0.0",
+  "packageManager": "pnpm@10.4.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
-    "preview": "vite preview"
+    "dev:web": "vite",
+    "dev:api": "pnpm --filter @nebula/api start:dev",
+    "build": "pnpm run build:web && pnpm run build:api",
+    "build:web": "vue-tsc -b && vite build",
+    "build:api": "pnpm --filter @nebula/api build",
+    "preview": "vite preview",
+    "db:generate": "pnpm --filter @nebula/api prisma:generate",
+    "db:validate": "pnpm --filter @nebula/api prisma:validate",
+    "db:migrate": "pnpm --filter @nebula/api prisma:migrate",
+    "db:seed": "pnpm --filter @nebula/api prisma:seed"
   },
   "dependencies": {
     "@vueuse/core": "^14.3.0",

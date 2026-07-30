@@ -49,6 +49,13 @@ export const PERMISSIONS = [
   'report:view',
   'system:config',
   'role:assign',
+  'log:view',
+  'project:view',
+  'project:create',
+  'project:update',
+  'project:delete',
+  'agent:view',
+  'agent:run',
 ] as const
 
 export type PermissionKey = (typeof PERMISSIONS)[number]

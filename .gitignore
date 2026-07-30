@@ -11,10 +11,21 @@ node_modules
 dist
 dist-ssr
 *.local
+.env.local
+.env.*.local
+server/.env
+server/.env.local
+.env.production.local
+server/dist
+server/generated
+server/node_modules
+*.tsbuildinfo
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
+.codex/
+.codex-temp/
 .idea
 .DS_Store
 *.suo
