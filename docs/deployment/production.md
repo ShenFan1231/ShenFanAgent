@@ -55,8 +55,45 @@ that are exposed to pull requests.
 
 ## HTTPS transition
 
-The first IP-based acceptance uses HTTP and `COOKIE_SECURE=false`. After DNS
-points a domain to the server, enable HTTPS, set `PUBLIC_ORIGIN` to the final
-`https://` origin, change `COOKIE_SECURE=true`, and recreate the API container.
+The first IP-based acceptance can use HTTP and `COOKIE_SECURE=false`. Before
+enabling HTTPS, publish these DNS records:
+
+```text
+@    A       47.242.5.16
+www  CNAME   shenfan1231.top
+```
+
+Recreate the HTTP web container once so that the ACME challenge volume and
+location are active:
+
+```bash
+docker compose --env-file .env.production.local -f compose.prod.yaml up -d --build web
+```
+
+After both names resolve to the server, issue the certificate and switch the
+stack to the HTTPS override:
+
+```bash
+chmod +x deploy/enable-https.sh deploy/install-cert-renewal.sh
+deploy/enable-https.sh /opt/nebula-admin shenfan1231.top 47.242.5.16
+```
+
+The script:
+
+- requests a Let's Encrypt certificate through the HTTP webroot challenge;
+- changes `PUBLIC_ORIGIN` to `https://shenfan1231.top`;
+- changes `COOKIE_SECURE` to `true`;
+- recreates the API and web containers with the HTTPS override;
+- installs a systemd timer that checks renewal twice daily and reloads Nginx.
+
+For future deployments, always include both Compose files:
+
+```bash
+docker compose \
+  --env-file .env.production.local \
+  -f compose.prod.yaml \
+  -f compose.https.yaml \
+  up -d --build
+```
 
 SSE proxy buffering must remain disabled after the TLS configuration is added.
