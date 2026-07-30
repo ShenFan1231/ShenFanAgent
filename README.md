@@ -5,9 +5,7 @@
 >
 > NEBULA 用于探索 AI Agent 参与产品设计、前端开发、问题修复、文档编写与自动化部署的完整工作流。项目以技术验证和实验研究为主要目的，功能、交互及实现方案仍可能持续调整，不建议未经充分评估直接用于生产环境。
 
-NEBULA 是一个面向数据中台场景的现代化后台管理系统示例。项目基于 Vue 3、TypeScript 和 Vite 构建，提供数据看板、趋势分析、订单管理、用户与角色权限管理、交互组件展示等功能。
-
-项目默认启用内置 Mock 数据，无需后端服务即可完成登录和主要功能体验。
+NEBULA 是一个面向企业数据中台场景的全栈后台系统。前端基于 Vue 3、TypeScript 和 Vite，后端采用 NestJS、Prisma 与 PostgreSQL，提供数据看板、用户与 RBAC 权限、动态菜单、业务数据、操作审计，以及支持真实流式输出与 Tool 轨迹的 AI Agent 工作台。
 
 ## 在线预览
 
@@ -21,12 +19,16 @@ NEBULA 是一个面向数据中台场景的现代化后台管理系统示例。�
 - 订单中心：订单列表、筛选、分页与详情页面
 - 系统管理：用户管理、角色权限和系统设置
 - 权限体系：支持角色、页面、菜单和按钮级权限控制
+- 身份认证：JWT Access Token、Refresh Token、安全 Cookie 与会话管理
 - 动态路由：根据当前角色和权限生成可访问路由与菜单
+- 业务模块：用户、角色、项目、订单、系统配置与操作日志
+- Agent 工作台：会话、任务进度、Tool 调用轨迹与 DeepSeek 真实 SSE
 - 多标签页：支持页面标签、缓存、刷新和关闭操作
 - 主题与布局：支持明暗主题、侧边栏折叠和界面设置
 - 交互实验室：集中展示基础组件、动画和权限指令
 - 响应式设计：适配桌面端及不同尺寸的浏览器窗口
-- Mock 模式：无需后端即可体验完整交互流程
+- 工程部署：Docker Compose、Nginx、PostgreSQL 持久卷与自动迁移
+- Mock 模式：仍可按需启用，方便纯前端演示和离线开发
 
 ## 技术栈
 
@@ -40,6 +42,12 @@ NEBULA 是一个面向数据中台场景的现代化后台管理系统示例。�
 | 原子化 CSS | UnoCSS |
 | 数据可视化 | ECharts |
 | 动画 | GSAP |
+| 后端框架 | NestJS |
+| ORM | Prisma |
+| 数据库 | PostgreSQL |
+| AI Provider | DeepSeek（可替换 Provider） |
+| 通信 | REST + authenticated SSE |
+| 部署 | Docker Compose + Nginx |
 | HTTP 请求 | Axios |
 | 工具库 | VueUse、Day.js |
 | 图标 | Iconify Lucide |
@@ -63,18 +71,22 @@ NEBULA 是一个面向数据中台场景的现代化后台管理系统示例。�
 
 - Node.js 22 或更高版本
 - pnpm 10
+- Docker Desktop / Docker Engine
 
 ### 安装与启动
 
 ```bash
 pnpm install
+docker compose -f compose.dev.yaml up -d --build
 pnpm dev
 ```
 
-开发服务器默认运行在：
+开发地址与服务端口：
 
 ```text
-http://localhost:5273
+Frontend:   http://localhost:5273
+API:        http://localhost:8080/api
+PostgreSQL: localhost:5432
 ```
 
 如果端口已被占用，Vite 会自动选择其他可用端口，请以终端输出为准。
@@ -113,6 +125,9 @@ pnpm preview
 ```text
 .
 ├─ public/                  # 静态资源及自定义域名配置
+├─ server/                  # NestJS、Prisma、迁移与种子数据
+├─ deploy/                  # Nginx、前端镜像及服务器初始化脚本
+├─ docs/                    # 分阶段架构与生产部署文档
 ├─ src/
 │  ├─ api/                 # API 模块与类型
 │  ├─ components/          # 通用组件、图表及反馈组件
@@ -126,7 +141,9 @@ pnpm preview
 │  ├─ types/               # 全局业务类型
 │  ├─ utils/               # 请求、缓存、格式化等工具
 │  └─ views/               # 业务页面
-├─ .github/workflows/      # GitHub Pages 自动部署
+├─ .github/workflows/      # 前后端 CI 构建检查
+├─ compose.dev.yaml        # 本地 API 与 PostgreSQL
+├─ compose.prod.yaml       # 生产 Nginx/API/PostgreSQL
 ├─ uno.config.ts           # UnoCSS 配置
 └─ vite.config.ts          # Vite 配置
 ```
@@ -145,17 +162,17 @@ pnpm preview
 
 ## 部署
 
-项目通过 GitHub Actions 自动部署到 GitHub Pages。
+生产环境使用单机 Docker Compose：
 
-推送代码到 `main` 分支后，工作流会自动执行：
+1. Nginx 托管 Vue 静态资源，并反向代理 `/api` 与 SSE；
+2. NestJS 仅在 Docker 内网提供服务；
+3. PostgreSQL 不暴露公网端口，数据写入持久卷；
+4. 启动时自动执行 Prisma migration，种子数据通过独立 profile 初始化；
+5. 生产密钥保存在被 Git 忽略的 `.env.production.local`。
 
-1. 安装 pnpm 和 Node.js 22
-2. 根据锁文件安装依赖
-3. 执行生产构建
-4. 生成 SPA 路由回退页面
-5. 上传并部署 GitHub Pages 产物
+完整步骤见 [生产部署文档](docs/deployment/production.md)。
 
-自定义域名由 `public/CNAME` 配置。
+GitHub Actions 不再发布 GitHub Pages，只负责 Prisma 校验和前后端生产构建。
 
 ## 常用命令
 

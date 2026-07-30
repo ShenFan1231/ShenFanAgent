@@ -26,8 +26,14 @@ const ROLE_PERMISSIONS: Record<RoleKey, PermissionKey[]> = {
     'order:export',
     'notice:publish',
     'report:view',
+    'log:view',
+    'project:view',
+    'project:create',
+    'project:update',
+    'agent:view',
+    'agent:run',
   ],
-  operator: ['user:view', 'order:view', 'report:view'],
+  operator: ['user:view', 'order:view', 'report:view', 'project:view', 'agent:view', 'agent:run'],
 }
 
 const GROUP_LABEL: Record<string, string> = {
@@ -37,6 +43,9 @@ const GROUP_LABEL: Record<string, string> = {
   report: '报表',
   system: '系统',
   role: '角色',
+  log: '日志',
+  project: '项目',
+  agent: 'Agent',
 }
 
 const groups = Object.entries(

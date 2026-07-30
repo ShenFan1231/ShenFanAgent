@@ -1,0 +1,150 @@
+name: nebula-admin
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    env_file:
+      - .env.production.local
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - nebula-postgres-data:/var/lib/postgresql/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    mem_limit: 512m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  migrate:
+    image: nebula-admin-maintenance:${APP_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: maintenance
+    restart: "no"
+    env_file:
+      - .env.production.local
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+    command: ["pnpm", "prisma:deploy"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - backend
+
+  api:
+    image: nebula-admin-api:${APP_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+      target: runner
+    restart: unless-stopped
+    env_file:
+      - .env.production.local
+    environment:
+      NODE_ENV: production
+      PORT: 8080
+      API_PREFIX: api
+      CORS_ORIGINS: ${PUBLIC_ORIGIN:?PUBLIC_ORIGIN is required}
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required}
+      JWT_ACCESS_TTL_SECONDS: ${JWT_ACCESS_TTL_SECONDS:-7200}
+      JWT_REFRESH_TTL_SECONDS: ${JWT_REFRESH_TTL_SECONDS:-2592000}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      COOKIE_SAME_SITE: ${COOKIE_SAME_SITE:-lax}
+      PASSWORD_HASH_ROUNDS: ${PASSWORD_HASH_ROUNDS:-12}
+      AGENT_PROVIDER: ${AGENT_PROVIDER:-local}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
+      DEEPSEEK_TIMEOUT_MS: ${DEEPSEEK_TIMEOUT_MS:-60000}
+    expose:
+      - "8080"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - frontend
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    mem_limit: 640m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  seed:
+    image: nebula-admin-maintenance:${APP_VERSION:-latest}
+    profiles: ["seed"]
+    restart: "no"
+    env_file:
+      - .env.production.local
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
+      PASSWORD_HASH_ROUNDS: ${PASSWORD_HASH_ROUNDS:-12}
+    command: ["pnpm", "prisma:seed"]
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - backend
+
+  web:
+    image: nebula-admin-web:${APP_VERSION:-latest}
+    build:
+      context: .
+      dockerfile: deploy/web.Dockerfile
+      args:
+        VITE_APP_BASE: /
+        VITE_API_BASE_URL: /api
+        VITE_REQUEST_TIMEOUT: 60000
+        VITE_USE_MOCK: "0"
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    mem_limit: 96m
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+volumes:
+  nebula-postgres-data:
+
+networks:
+  frontend:
+  backend:
+    internal: true

@@ -1,4 +1,5 @@
 import type { PermissionKey, RoleKey } from '@/types/permission'
+import type { MenuItem } from '@/types/menu'
 
 export interface LoginParams {
   username: string
@@ -10,7 +11,8 @@ export interface LoginParams {
 
 export interface LoginResult {
   token: string
-  refreshToken: string
+  /** Mock 环境会返回；真实 API 使用 HttpOnly Cookie 承载刷新令牌。 */
+  refreshToken?: string
   /** 过期时间（秒） */
   expiresIn: number
 }
@@ -24,8 +26,12 @@ export interface UserProfile {
   phone: string
   department: string
   jobTitle: string
+  status?: 'active' | 'disabled' | 'pending'
+  isAdmin?: boolean
   roles: RoleKey[]
   permissions: PermissionKey[]
+  /** 真实 API 下发；Mock 环境缺省时继续由静态路由生成。 */
+  menus?: MenuItem[]
   lastLoginAt: string
   lastLoginIp: string
   /** 连续登录天数，欢迎区文案使用 */

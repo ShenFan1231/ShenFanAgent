@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
+import { systemApi } from '@/api'
+import type { SystemSettings } from '@/api/types/system'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppSelect from '@/components/ui/AppSelect.vue'
@@ -8,6 +10,7 @@ import AppSwitch from '@/components/ui/AppSwitch.vue'
 import AppTag from '@/components/ui/AppTag.vue'
 import GlassPanel from '@/components/ui/GlassPanel.vue'
 import PageHeader from '@/components/ui/PageHeader.vue'
+import { useAsyncData } from '@/composables/useAsyncData'
 import { useEnterMotion } from '@/composables/useEnterMotion'
 import { vPermission } from '@/directives'
 import { toast } from '@/utils/toast'
@@ -17,9 +20,9 @@ useEnterMotion(rootRef, { stagger: 0.08 })
 
 const saving = ref(false)
 
-const form = ref({
+const form = ref<SystemSettings>({
   siteName: 'NEBULA 控制台',
-  apiBase: import.meta.env.VITE_API_BASE_URL,
+  apiBase: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: String(import.meta.env.VITE_REQUEST_TIMEOUT ?? '15000'),
   sessionTtl: '7200',
   logLevel: 'info',
@@ -27,6 +30,12 @@ const form = ref({
   ipWhitelist: false,
   auditLog: true,
   autoBackup: true,
+})
+
+const { loading } = useAsyncData(() => systemApi.settings(), {
+  onSuccess: (settings) => {
+    form.value = { ...settings }
+  },
 })
 
 const LOG_LEVELS = [
@@ -38,9 +47,12 @@ const LOG_LEVELS = [
 
 async function save(): Promise<void> {
   saving.value = true
-  await new Promise((resolve) => setTimeout(resolve, 600))
-  saving.value = false
-  toast.success('配置已保存', '演示环境不会写入真实配置中心')
+  try {
+    form.value = await systemApi.updateSettings(form.value)
+    toast.success('配置已保存', '配置已写入 PostgreSQL')
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -58,7 +70,7 @@ async function save(): Promise<void> {
           v-permission="'system:config'"
           variant="primary"
           icon="i-lucide-save"
-          :loading="saving"
+          :loading="saving || loading"
           @click="save"
         >
           保存配置

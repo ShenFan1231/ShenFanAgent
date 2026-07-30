@@ -46,3 +46,44 @@ export interface NotificationItem {
   read: boolean
   createdAt: string
 }
+
+export interface SystemSettings {
+  siteName: string
+  apiBase: string
+  timeout: string
+  sessionTtl: string
+  logLevel: 'debug' | 'info' | 'warn' | 'error'
+  mfa: boolean
+  ipWhitelist: boolean
+  auditLog: boolean
+  autoBackup: boolean
+}
+
+export type OperationLevel = 'info' | 'success' | 'warning' | 'danger'
+
+export interface OperationLogItem {
+  id: string
+  level: OperationLevel
+  module: string
+  action: string
+  resource: string
+  resourceId: string
+  summary: string
+  method: string
+  path: string
+  ipAddress: string
+  statusCode: number | null
+  durationMs: number | null
+  success: boolean
+  operator: {
+    username: string
+    nickname: string
+    avatar: string
+  }
+  createdAt: string
+}
+
+export interface OperationLogQuery extends PageQuery {
+  module?: string | ''
+  level?: OperationLevel | ''
+}

@@ -6,6 +6,13 @@ export const authApi = {
     return api.post<LoginResult>('/auth/login', params, { withoutToken: true, silentError: true })
   },
 
+  refresh() {
+    return api.post<LoginResult>('/auth/refresh', undefined, {
+      withoutToken: true,
+      silentError: true,
+    })
+  },
+
   profile() {
     return api.get<UserProfile>('/auth/profile', undefined, { retry: 1 })
   },

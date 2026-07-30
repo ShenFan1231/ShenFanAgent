@@ -36,8 +36,14 @@ const ROLE_PERMISSIONS: Record<RoleKey, PermissionKey[]> = {
     'order:export',
     'notice:publish',
     'report:view',
+    'log:view',
+    'project:view',
+    'project:create',
+    'project:update',
+    'agent:view',
+    'agent:run',
   ],
-  operator: ['user:view', 'order:view', 'report:view'],
+  operator: ['user:view', 'order:view', 'report:view', 'project:view', 'agent:view', 'agent:run'],
 }
 
 const ACCOUNT_PRESET: Record<RoleKey, { username: string; nickname: string; jobTitle: string }> = {

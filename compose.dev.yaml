@@ -1,0 +1,57 @@
+name: nebula-admin-dev
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nebula}
+      POSTGRES_USER: ${POSTGRES_USER:-nebula}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-in-local-env}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - nebula-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-nebula} -d ${POSTGRES_DB:-nebula}",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - path: server/.env.local
+        required: false
+    environment:
+      NODE_ENV: development
+      PORT: 8080
+      API_PREFIX: api
+      CORS_ORIGINS: http://localhost:5273
+      DATABASE_URL: postgresql://${POSTGRES_USER:-nebula}:${POSTGRES_PASSWORD:-change-me-in-local-env}@postgres:5432/${POSTGRES_DB:-nebula}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-development-only-secret-change-before-production}
+      JWT_ACCESS_TTL_SECONDS: ${JWT_ACCESS_TTL_SECONDS:-7200}
+      JWT_REFRESH_TTL_SECONDS: ${JWT_REFRESH_TTL_SECONDS:-2592000}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      COOKIE_SAME_SITE: ${COOKIE_SAME_SITE:-lax}
+      PASSWORD_HASH_ROUNDS: ${PASSWORD_HASH_ROUNDS:-12}
+    ports:
+      - "${API_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  nebula-postgres-data:

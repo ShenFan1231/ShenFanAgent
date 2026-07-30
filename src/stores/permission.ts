@@ -21,10 +21,14 @@ export const usePermissionStore = defineStore('permission', () => {
    * 根据角色 / 权限生成可访问路由与菜单。
    * 返回值交给路由守卫去 addRoute，store 本身不碰 router 实例，方便单测。
    */
-  function buildRoutes(roles: RoleKey[], permissions: PermissionKey[]): RouteRecordRaw[] {
+  function buildRoutes(
+    roles: RoleKey[],
+    permissions: PermissionKey[],
+    serverMenus?: MenuItem[],
+  ): RouteRecordRaw[] {
     const filtered = filterRoutes(asyncRoutes, { roles, permissions })
     accessibleRoutes.value = filtered
-    menus.value = generateMenus(filtered)
+    menus.value = serverMenus?.length ? serverMenus : generateMenus(filtered)
     generated.value = true
     return filtered
   }
