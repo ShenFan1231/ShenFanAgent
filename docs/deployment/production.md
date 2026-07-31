@@ -97,3 +97,32 @@ docker compose \
 ```
 
 SSE proxy buffering must remain disabled after the TLS configuration is added.
+
+## Continuous deployment
+
+The `CI/CD` GitHub Actions workflow deploys every successful push to `main`.
+Pull requests run the complete validation and build job but never receive the
+production SSH secrets and never connect to the server.
+
+The production deployment job:
+
+1. checks out the exact `main` commit that passed CI;
+2. uses a dedicated `deploy` account and pinned SSH host key;
+3. synchronizes source to `/opt/nebula-admin` while preserving
+   `.env.production.local`;
+4. builds the web, API, and migration images with the full Git commit SHA as
+   `APP_VERSION`;
+5. applies Prisma migrations and recreates changed containers;
+6. requires both HTTPS health endpoints to pass;
+7. records the successfully deployed Git commit in `.env.production.local`.
+
+The GitHub `production` environment contains these encrypted secrets:
+
+- `DEPLOY_HOST`
+- `DEPLOY_USER`
+- `DEPLOY_SSH_PRIVATE_KEY`
+- `DEPLOY_KNOWN_HOSTS`
+
+Database credentials, JWT secrets, the DeepSeek API key, PostgreSQL data, and
+TLS certificates remain on the server and are excluded from source
+synchronization.

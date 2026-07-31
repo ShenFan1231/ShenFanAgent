@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD
 
 on:
   push:
@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: pipeline-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:
@@ -38,5 +38,84 @@ jobs:
       - name: Validate Prisma schema
         run: pnpm db:validate
 
+      - name: Validate deployment manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          cp .env.production.example .env.production.local
+          bash -n deploy/*.sh
+          docker compose \
+            --env-file .env.production.local \
+            -f compose.prod.yaml \
+            config --quiet
+          docker compose \
+            --env-file .env.production.local \
+            -f compose.prod.yaml \
+            -f compose.https.yaml \
+            config --quiet
+          rm -f .env.production.local
+
       - name: Build frontend and API
         run: pnpm build
+
+  deploy:
+    name: Deploy production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://shenfan1231.top
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure deployment SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "${HOME}/.ssh"
+          printf '%s\n' "${DEPLOY_SSH_PRIVATE_KEY}" > "${HOME}/.ssh/nebula_deploy"
+          printf '%s\n' "${DEPLOY_KNOWN_HOSTS}" > "${HOME}/.ssh/known_hosts"
+          chmod 0600 "${HOME}/.ssh/nebula_deploy" "${HOME}/.ssh/known_hosts"
+
+      - name: Sync release source
+        shell: bash
+        run: |
+          set -euo pipefail
+          rsync -az --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.codex/' \
+            --exclude '.codex-temp/' \
+            --exclude '.agents/' \
+            --exclude '.env.production.local' \
+            --exclude '*.pre-https' \
+            --exclude 'node_modules/' \
+            --exclude 'dist/' \
+            -e "ssh -i ${HOME}/.ssh/nebula_deploy -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            ./ "${DEPLOY_USER}@${DEPLOY_HOST}:/opt/nebula-admin/"
+
+      - name: Build and deploy release
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh \
+            -i "${HOME}/.ssh/nebula_deploy" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "cd /opt/nebula-admin && ./deploy/deploy-production.sh '${GITHUB_SHA}'"
+
+      - name: Remove deployment key
+        if: always()
+        shell: bash
+        run: rm -f "${HOME}/.ssh/nebula_deploy"
