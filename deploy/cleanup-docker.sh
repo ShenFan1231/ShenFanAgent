@@ -3,7 +3,9 @@ set -Eeuo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: cleanup-docker.sh [--dry-run|--apply] [--current-version VERSION]
+Usage: cleanup-docker.sh [--dry-run|--apply]
+                         [--current-version VERSION]
+                         [--previous-version VERSION]
 
 Safely removes old NEBULA application image tags, old stopped Compose
 containers, dangling images, and excess BuildKit cache. Docker volumes are
@@ -15,6 +17,7 @@ EOF
 
 mode="dry-run"
 current_version=""
+previous_version=""
 project_dir="${PROJECT_DIR:-/opt/nebula-admin}"
 keep_release_count="${KEEP_RELEASE_COUNT:-2}"
 stopped_container_hours="${STOPPED_CONTAINER_HOURS:-24}"
@@ -36,6 +39,14 @@ while [[ $# -gt 0 ]]; do
         exit 2
       fi
       current_version="$2"
+      shift 2
+      ;;
+    --previous-version)
+      if [[ $# -lt 2 ]]; then
+        echo "--previous-version requires a value." >&2
+        exit 2
+      fi
+      previous_version="$2"
       shift 2
       ;;
     --help|-h)
@@ -77,6 +88,12 @@ if [[ -z "${current_version}" && -f "${env_file}" ]]; then
       head -n 1
   )"
 fi
+if [[ -z "${previous_version}" && -f "${env_file}" ]]; then
+  previous_version="$(
+    sed -n 's/^PREVIOUS_APP_VERSION=//p' "${env_file}" |
+      head -n 1
+  )"
+fi
 
 repositories=(
   "nebula-admin-api"
@@ -86,6 +103,7 @@ repositories=(
 
 echo "NEBULA Docker cleanup mode: ${mode}"
 echo "Current release: ${current_version:-unknown}"
+echo "Previous release: ${previous_version:-auto-detect}"
 echo "Release retention: ${keep_release_count}"
 echo "Build cache cap: ${build_cache_max_gb}GB"
 echo "Stopped container retention: ${stopped_container_hours}h"
@@ -130,6 +148,12 @@ mapfile -t release_candidates < <(
     done |
     sort -r
 )
+
+if [[ -n "${previous_version}" ]] \
+  && [[ "${previous_version}" != "${current_version}" ]] \
+  && is_complete_release "${previous_version}"; then
+  keep_tags["${previous_version}"]=1
+fi
 
 kept_count="${#keep_tags[@]}"
 for candidate in "${release_candidates[@]}"; do

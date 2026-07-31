@@ -31,6 +31,11 @@ done
 
 export APP_VERSION="${release_version}"
 
+previous_release_version="$(
+  sed -n 's/^APP_VERSION=//p' "${env_file}" |
+    head -n 1
+)"
+
 free_disk_bytes() {
   df -PB1 "${project_dir}" |
     awk 'NR == 2 { print $4 }'
@@ -90,16 +95,28 @@ if [[ "${healthy}" != "true" ]]; then
   exit 1
 fi
 
-if grep -q '^APP_VERSION=' "${env_file}"; then
-  sed -i "s/^APP_VERSION=.*/APP_VERSION=${release_version}/" "${env_file}"
-else
-  printf '\nAPP_VERSION=%s\n' "${release_version}" >> "${env_file}"
+set_env_value() {
+  local key="$1"
+  local value="$2"
+
+  if grep -q "^${key}=" "${env_file}"; then
+    sed -i "s|^${key}=.*|${key}=${value}|" "${env_file}"
+  else
+    printf '\n%s=%s\n' "${key}" "${value}" >> "${env_file}"
+  fi
+}
+
+set_env_value "APP_VERSION" "${release_version}"
+if [[ "${previous_release_version}" =~ ^[0-9a-f]{40}$ ]] \
+  && [[ "${previous_release_version}" != "${release_version}" ]]; then
+  set_env_value "PREVIOUS_APP_VERSION" "${previous_release_version}"
 fi
 chmod 0600 "${env_file}"
 
 if ! "${cleanup_script}" \
   --apply \
-  --current-version "${release_version}"; then
+  --current-version "${release_version}" \
+  --previous-version "${previous_release_version}"; then
   echo "WARNING: Production is healthy, but post-deployment cleanup reported an error." >&2
 fi
 
