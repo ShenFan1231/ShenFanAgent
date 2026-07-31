@@ -6,6 +6,9 @@ release_version="${1:-}"
 env_file="${project_dir}/.env.production.local"
 base_compose="${project_dir}/compose.prod.yaml"
 https_compose="${project_dir}/compose.https.yaml"
+cleanup_script="${project_dir}/deploy/cleanup-docker.sh"
+cleanup_free_gb="${CLEANUP_FREE_GB:-15}"
+abort_free_gb="${ABORT_FREE_GB:-8}"
 
 if [[ ! "${release_version}" =~ ^[0-9a-f]{40}$ ]]; then
   echo "A full 40-character Git commit SHA is required." >&2
@@ -18,7 +21,8 @@ for required_file in \
   "${env_file}" \
   "${base_compose}" \
   "${https_compose}" \
-  "${project_dir}/deploy/nginx.https.conf"; do
+  "${project_dir}/deploy/nginx.https.conf" \
+  "${cleanup_script}"; do
   if [[ ! -f "${required_file}" ]]; then
     echo "Required production file is missing: ${required_file}" >&2
     exit 1
@@ -26,6 +30,33 @@ for required_file in \
 done
 
 export APP_VERSION="${release_version}"
+
+free_disk_bytes() {
+  df -PB1 "${project_dir}" |
+    awk 'NR == 2 { print $4 }'
+}
+
+cleanup_threshold_bytes=$((cleanup_free_gb * 1024 * 1024 * 1024))
+abort_threshold_bytes=$((abort_free_gb * 1024 * 1024 * 1024))
+available_bytes="$(free_disk_bytes)"
+
+echo "Pre-deployment disk state:"
+df -h "${project_dir}"
+docker system df
+
+if (( available_bytes < cleanup_threshold_bytes )); then
+  echo "Available disk is below ${cleanup_free_gb}GB; running guarded cleanup before the build."
+  if ! "${cleanup_script}" --apply; then
+    echo "Pre-deployment cleanup reported an error; disk safety will be checked again." >&2
+  fi
+  available_bytes="$(free_disk_bytes)"
+fi
+
+if (( available_bytes < abort_threshold_bytes )); then
+  echo "Deployment stopped: less than ${abort_free_gb}GB is available after cleanup." >&2
+  df -h "${project_dir}" >&2
+  exit 1
+fi
 
 compose=(
   docker compose
@@ -65,6 +96,12 @@ else
   printf '\nAPP_VERSION=%s\n' "${release_version}" >> "${env_file}"
 fi
 chmod 0600 "${env_file}"
+
+if ! "${cleanup_script}" \
+  --apply \
+  --current-version "${release_version}"; then
+  echo "WARNING: Production is healthy, but post-deployment cleanup reported an error." >&2
+fi
 
 "${compose[@]}" ps
 echo "Production release ${release_version} is healthy."

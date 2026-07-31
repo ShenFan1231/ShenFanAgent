@@ -44,6 +44,11 @@ jobs:
           set -euo pipefail
           cp .env.production.example .env.production.local
           bash -n deploy/*.sh
+          if grep -Eq 'docker[[:space:]]+(system|volume)[[:space:]]+prune' \
+            deploy/cleanup-docker.sh; then
+            echo "Unsafe global or volume prune command detected." >&2
+            exit 1
+          fi
           docker compose \
             --env-file .env.production.local \
             -f compose.prod.yaml \
@@ -67,6 +72,9 @@ jobs:
     environment:
       name: production
       url: https://shenfan1231.top
+    concurrency:
+      group: production-server
+      cancel-in-progress: false
     env:
       DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
       DEPLOY_USER: ${{ secrets.DEPLOY_USER }}

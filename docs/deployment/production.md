@@ -115,6 +115,44 @@ The production deployment job:
 5. applies Prisma migrations and recreates changed containers;
 6. requires both HTTPS health endpoints to pass;
 7. records the successfully deployed Git commit in `.env.production.local`.
+8. keeps the current and previous complete application releases, then removes
+   older NEBULA image tags and caps the BuildKit cache at 2 GiB.
+
+Before a build, deployment checks the root filesystem. Below 15 GiB free it
+runs the same guarded cleanup first. If less than 8 GiB remains, deployment
+stops before building and leaves the current production containers running.
+
+The cleanup is deliberately restricted:
+
+- only `nebula-admin-api`, `nebula-admin-web`, and
+  `nebula-admin-maintenance` release tags are version-pruned;
+- the current and previous complete release are retained;
+- stopped containers from the `nebula-admin` Compose project are retained for
+  24 hours;
+- dangling image layers are removed and BuildKit cache is capped at 2 GiB;
+- Docker volumes are never inspected, pruned, or removed.
+
+The `Production maintenance` workflow runs the guarded cleanup every Monday at
+03:20 Asia/Shanghai and can also be started manually. It shares a concurrency
+lock with production deployment, so cleanup and deployment cannot run at the
+same time.
+
+Preview the exact cleanup targets without changing the host:
+
+```bash
+cd /opt/nebula-admin
+./deploy/cleanup-docker.sh --dry-run
+```
+
+Apply the same policy manually:
+
+```bash
+cd /opt/nebula-admin
+./deploy/cleanup-docker.sh --apply
+```
+
+Do not replace this script with `docker system prune -a --volumes`: PostgreSQL
+data and TLS certificates are intentionally outside the cleanup scope.
 
 The GitHub `production` environment contains these encrypted secrets:
 

@@ -1,0 +1,54 @@
+name: Production maintenance
+
+on:
+  schedule:
+    # Monday 03:20 Asia/Shanghai (GitHub schedules use UTC).
+    - cron: "20 19 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker-cleanup:
+    name: Guarded Docker cleanup
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: https://shenfan1231.top
+    concurrency:
+      group: production-server
+      cancel-in-progress: false
+    env:
+      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+      DEPLOY_SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+
+    steps:
+      - name: Configure maintenance SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -d -m 0700 "${HOME}/.ssh"
+          printf '%s\n' "${DEPLOY_SSH_PRIVATE_KEY}" > "${HOME}/.ssh/nebula_deploy"
+          printf '%s\n' "${DEPLOY_KNOWN_HOSTS}" > "${HOME}/.ssh/known_hosts"
+          chmod 0600 "${HOME}/.ssh/nebula_deploy" "${HOME}/.ssh/known_hosts"
+
+      - name: Run guarded production cleanup
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh \
+            -i "${HOME}/.ssh/nebula_deploy" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "cd /opt/nebula-admin && ./deploy/cleanup-docker.sh --apply"
+
+      - name: Remove maintenance key
+        if: always()
+        shell: bash
+        run: rm -f "${HOME}/.ssh/nebula_deploy"
