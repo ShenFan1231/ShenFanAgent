@@ -127,6 +127,8 @@ The cleanup is deliberately restricted:
 - only `nebula-admin-api`, `nebula-admin-web`, and
   `nebula-admin-maintenance` release tags are version-pruned;
 - the current and previous complete release are retained;
+- the last successful `APP_VERSION` is recorded as `PREVIOUS_APP_VERSION`, so
+  cache-identical image timestamps cannot make rollback retention ambiguous;
 - stopped containers from the `nebula-admin` Compose project are retained for
   24 hours;
 - dangling image layers are removed and BuildKit cache is capped at 2 GiB;
