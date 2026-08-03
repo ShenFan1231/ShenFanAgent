@@ -233,8 +233,8 @@ pnpm dev:web
 | 服务 | 地址 |
 | --- | --- |
 | Web | <http://localhost:5273> |
-| API | <http://localhost:8080/api> |
-| 健康检查 | <http://localhost:8080/api/health> |
+| API | <http://localhost:8888/api> |
+| 健康检查 | <http://localhost:8888/api/health> |
 | PostgreSQL | `localhost:5432` |
 
 也可以让 Docker 同时运行 API 与 PostgreSQL：
@@ -348,7 +348,7 @@ Pull Request 只运行校验与构建，不会接触生产 SSH 密钥或连接�
 | `VITE_API_BASE_URL` | `/api` | API 基础路径 |
 | `VITE_REQUEST_TIMEOUT` | `15000` | 请求超时，单位毫秒 |
 | `VITE_USE_MOCK` | `1` | `1` 使用 Mock，`0` 接入真实 API |
-| `VITE_PROXY_TARGET` | `http://127.0.0.1:8080` | 本地开发代理目标 |
+| `VITE_PROXY_TARGET` | `http://127.0.0.1:8888` | 本地开发代理目标 |
 
 生产 Web 镜像固定使用同源 `/api` 并关闭 Mock。
 

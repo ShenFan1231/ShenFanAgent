@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
         // Point this at a real gateway once the backend is available;
         // the mock adapter short-circuits requests before they reach the network.
         '/api': {
-          target: env.VITE_PROXY_TARGET || 'http://127.0.0.1:8080',
+          target: env.VITE_PROXY_TARGET || 'http://127.0.0.1:8888',
           changeOrigin: true,
         },
       },

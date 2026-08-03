@@ -92,13 +92,13 @@ pnpm db:seed
 pnpm dev:web
 ```
 
-The API is available at `http://localhost:8080/api`. The Vite development
+The API is available at `http://localhost:8888/api`. The Vite development
 origin is allowed by the Compose CORS configuration. To use the real API,
 configure:
 
 ```dotenv
 VITE_USE_MOCK=0
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:8888/api
 ```
 
 Production must override `JWT_SECRET`, database credentials, CORS origins, and

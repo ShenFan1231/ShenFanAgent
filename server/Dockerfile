@@ -30,5 +30,5 @@ COPY --from=builder /workspace/server/dist ./dist
 COPY --from=builder /workspace/server/generated/prisma ./generated/prisma
 COPY --from=builder /workspace/server/prisma ./prisma
 
-EXPOSE 8080
+EXPOSE 8888
 CMD ["node", "dist/main.js"]
