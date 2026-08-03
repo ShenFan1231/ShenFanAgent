@@ -108,7 +108,7 @@ jobs:
             --exclude '*.pre-https' \
             --exclude 'node_modules/' \
             --exclude 'dist/' \
-            -e "ssh -i ${HOME}/.ssh/nebula_deploy -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes" \
+            -e "ssh -i ${HOME}/.ssh/nebula_deploy -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=10" \
             ./ "${DEPLOY_USER}@${DEPLOY_HOST}:/opt/nebula-admin/"
 
       - name: Build and deploy release
@@ -120,6 +120,8 @@ jobs:
             -o BatchMode=yes \
             -o IdentitiesOnly=yes \
             -o StrictHostKeyChecking=yes \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
             "${DEPLOY_USER}@${DEPLOY_HOST}" \
             "cd /opt/nebula-admin && ./deploy/deploy-production.sh '${GITHUB_SHA}'"
 
