@@ -79,7 +79,7 @@ export function validateEnvironment(input: Record<string, unknown>): AppEnvironm
 
   return {
     NODE_ENV: nodeEnv as AppEnvironment['NODE_ENV'],
-    PORT: parseInteger(input.PORT, 8080, 'PORT', 1, 65535),
+    PORT: parseInteger(input.PORT, 8888, 'PORT', 1, 65535),
     API_PREFIX: String(input.API_PREFIX ?? 'api').replace(/^\/+|\/+$/g, ''),
     CORS_ORIGINS: String(input.CORS_ORIGINS ?? 'http://localhost:5273'),
     DATABASE_URL: databaseUrl,

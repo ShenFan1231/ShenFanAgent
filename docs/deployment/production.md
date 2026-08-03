@@ -12,7 +12,7 @@ The first public release runs on one Ubuntu host:
 - container JSON logs are size-limited.
 
 Only ports `22`, `80`, and `443` should be allowed by the cloud firewall.
-Ports `5432` and `8080` must not be published.
+Ports `5432` and `8888` must not be published.
 
 ## Local production validation
 

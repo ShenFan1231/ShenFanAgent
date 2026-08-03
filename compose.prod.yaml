@@ -57,7 +57,7 @@ services:
       - .env.production.local
     environment:
       NODE_ENV: production
-      PORT: 8080
+      PORT: 8888
       API_PREFIX: api
       CORS_ORIGINS: ${PUBLIC_ORIGIN:?PUBLIC_ORIGIN is required}
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
@@ -73,7 +73,7 @@ services:
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
       DEEPSEEK_TIMEOUT_MS: ${DEEPSEEK_TIMEOUT_MS:-60000}
     expose:
-      - "8080"
+      - "8888"
     depends_on:
       migrate:
         condition: service_completed_successfully
@@ -81,7 +81,7 @@ services:
       - frontend
       - backend
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/api/health"]
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8888/api/health"]
       interval: 15s
       timeout: 5s
       retries: 5
