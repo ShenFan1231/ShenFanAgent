@@ -30,6 +30,9 @@ for required_file in \
 done
 
 export APP_VERSION="${release_version}"
+# The production host has 2 GiB of RAM. Serial builds prevent API, migration,
+# and web image builds from exhausting memory and swap at the same time.
+export COMPOSE_PARALLEL_LIMIT="${COMPOSE_PARALLEL_LIMIT:-1}"
 
 previous_release_version="$(
   sed -n 's/^APP_VERSION=//p' "${env_file}" |
