@@ -397,3 +397,4 @@ Pull Request 只运行校验与构建，不会接触生产 SSH 密钥或连接�
 | `pnpm db:validate` | 校验 Prisma Schema |
 | `pnpm db:migrate` | 创建并应用开发迁移 |
 | `pnpm db:seed` | 写入演示账号与业务数据 |
+<!-- Deployment verification: 2026-10-19 -->
